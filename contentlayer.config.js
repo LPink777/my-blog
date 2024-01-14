@@ -3,6 +3,13 @@ import remarkGfm from 'remark-gfm';
 import rehypeSlug from 'rehype-slug'
 import rehypeAutolinkHeadings from 'rehype-autolink-headings'
 import rehypeCodeTitles from 'rehype-code-titles'
+import rehypePrettyCode from "rehype-pretty-code"
+
+const options = {
+  // See Options section below.
+  theme: "one-dark-pro",
+  defaultLang: "javascript",
+};
 
 /** @type {import('contentlayer/source-files').ComputedFields} */
 const computedFields = {
@@ -56,6 +63,7 @@ export default makeSource({
   contentDirPath: "./content",
   documentTypes: [Post, Page],
   mdx: {
-    remarkPlugins: [remarkGfm, rehypeSlug, rehypeAutolinkHeadings, rehypeCodeTitles],
+    remarkPlugins: [remarkGfm],
+    rehypePlugins: [[rehypePrettyCode, options], rehypeSlug, rehypeAutolinkHeadings, rehypeCodeTitles],
   },
 })
