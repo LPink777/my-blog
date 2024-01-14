@@ -1,4 +1,8 @@
-import { defineDocumentType, makeSource } from "contentlayer/source-files"
+import { defineDocumentType, makeSource } from "contentlayer/source-files";
+import remarkGfm from 'remark-gfm';
+import rehypeSlug from 'rehype-slug'
+import rehypeAutolinkHeadings from 'rehype-autolink-headings'
+import rehypeCodeTitles from 'rehype-code-titles'
 
 /** @type {import('contentlayer/source-files').ComputedFields} */
 const computedFields = {
@@ -51,4 +55,7 @@ export const Post = defineDocumentType(() => ({
 export default makeSource({
   contentDirPath: "./content",
   documentTypes: [Post, Page],
+  mdx: {
+    remarkPlugins: [remarkGfm, rehypeSlug, rehypeAutolinkHeadings, rehypeCodeTitles],
+  },
 })
