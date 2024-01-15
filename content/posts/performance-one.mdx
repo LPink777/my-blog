@@ -1,0 +1,202 @@
+---
+title: 前端性能优化指北(一)
+description: 全面了解市面上常用的性能测量工具及相关指标的含义
+date: "2024-01-15"
+---
+
+## 为什么要进行性能优化
+
+根据相关的数据看一下页面的加载时间会对应用会有什么影响：
+
+*   根据 Google 的研究表明，如果一个网站的加载时间从 1 秒增加到 3 秒，其跳出率将增加 32%。如果加载时间从 1 秒增加到 5 秒，其跳出率将增加 90%。
+*   根据 Akamai 的研究表明，47% 的用户期望网站在 2 秒内加载完毕，40% 的用户将在 3 秒内放弃网站，一秒钟的延迟可能会导致 7% 的转化率下降。
+*   根据 Amazon 的研究表明，每增加 100 毫秒的加载时间，他们的销售额将减少 1%。
+*   根据 Google 的研究表明，如果在移动设备上的页面加载时间从 1 秒增加到 3 秒，其跳出率将增加 53%。
+
+从以上数据可以看出，页面的加载速度会直接影响用户的使用体验，所以性能优化是我们每个开发人员必须要做的事情。做好性能优化，不仅会改善用户体验，还可以提高网站的搜索引擎排名、减少服务器负载、节省贷款、提高转化率等等，总之就是除了好处没有坏处 😎
+
+## 性能衡量工具
+
+如何有效的对性能优化进行度量呢，下面来介绍一下市面上通用的几种方案·
+
+### lighthouse
+
+Lighthouse 是一个开源的自动化工具，用于提高网页的质量。
+
+浏览器中查看：
+
+打开浏览器 ⇒ 打开网页 ⇒ 打开 Chrome DevTools ⇒ 点击**Lighthouse** tab ⇒ 点击 **Analyze page load ⇒** 一段时间之后lighthouse会给出页面的详细分析报告
+
+![Untitled.png](https://i.imgur.com/eXH9ZDA.png)
+
+![Untitled 1.png](https://imgur.com/t5RWtpV.png)
+
+node中使用：
+
+```bash
+npm install -g lighthouse
+```
+
+命令行中执行：lighthouse `<url>` 可以运行审核网站
+
+```bash
+lighthouse https://www.baidu.com/ --output html --output-path ./report.html
+```
+
+上述的命令行指令最终会导出一个report.html报告到本地,点击打开即可查看具体的分析报告
+
+最新版的lighthouse的核心指标分别是FCP、LCP、CLS、TTI、TBT、SI这五项，后面我们会详细介绍各项指标。
+
+https://googlechrome.github.io/lighthouse/scorecalc/
+
+### webPageTest
+
+WebPageTest是一种用于测量网页加载性能的工具。它可以帮助你了解网页在不同浏览器、设备和连接条件下的加载时间，并给出建议来提升网页的性能。
+
+使用：打开https://www.webpagetest.org/ 输入要测试的网站，点击开始测试按钮即可
+
+![Untitled 2.png](https://imgur.com/wA0Xy8w.png)
+
+可以看到webpagetest会给出页面各个指标的分数以及整个渲染过程的快照，还可以看到各个请求的瀑布流可视图，可以帮助你直观的看出各个请求的详细信息。
+
+![Untitled 3.png](https://imgur.com/oVFQohf.png)
+
+与lighthouse不同，webpagetest的核心指标分别是FCP、LCP、CLS、FID、TTFB、INP。
+
+### web vitals
+
+web vitals是针对目前许多的性能测量和性能报告工具，一些开发者对这些工具的使用十分在行，而另一些开发者则发现大量的工具和指标令人应接不暇的这种情况，web vitals提出简化场景，帮助网站专注于最重要的指标。
+
+web vitals的核心指标主要为LCP、FID、CLS。
+
+![Untitled 4.png](https://imgur.com/fUQuc9U.png)
+
+如果你想在javascript中测量核心 Web 指标，可以使用 [web-vitals](https://github.com/GoogleChrome/web-vitals) JavaScript 库，简单调用如下
+
+```jsx
+import {onCLS, onFID, onLCP} from 'web-vitals';
+
+function sendToAnalytics(metric) {
+  const body = JSON.stringify(metric);
+  // Use `navigator.sendBeacon()` if available, falling back to `fetch()`.
+  (navigator.sendBeacon && navigator.sendBeacon('/analytics', body)) ||
+      fetch('/analytics', {body, method: 'POST', keepalive: true});
+}
+
+onCLS(sendToAnalytics);
+onFID(sendToAnalytics);
+onLCP(sendToAnalytics);
+```
+
+### PageSpeed Insights
+
+PageSpeed Insights (PSI) 与webPagetest类似，也会针对网页在移动设备和桌面设备上的用户体验生成报告，并就如何改进网页提出建议。不同的是PageSpeed Insights的核心指标采用的是wev vitals的指标。
+
+![Untitled 5.png](https://imgur.com/0MW7kJQ.png)
+
+## 性能指标
+
+可以看到，上述介绍的性能工具中都包含了有关性能的指标，那么接下来就详细介绍一下各个指标。
+
+首先我们来看一下上面各个工具重点测量的一些核心指标。
+
+| lighthouse | webPageTest | web vitals | PageSpeed Insights |
+| ---------- | ----------- | ---------- | ------------------ |
+| FCP        | FCP         | LCP        | LCP                |
+| LCP        | LCP         | FID        | FID                |
+| SI         | CLS         | CLS        | CLS                |
+| CLS        | FID         |            |                    |
+| TTI        | TTFB        |            |                    |
+| TBT        | INP         |            |                    |
+
+### FCP
+
+全称**First Contentful Paint**，意为首次内容绘制，首次内容绘制 (FCP) 指标测量页面从开始加载到页面内容的任何部分在屏幕上完成渲染的时间。对于该指标，"内容"指的是文本、图像（包括背景图像）、`<svg>`元素或非白色的`<canvas>`元素。
+
+![Untitled 6.png](https://imgur.com/9nqcaJw.png)
+
+在上方的加载时间轴中，FCP 发生在第二帧，因为那是首批文本和图像元素在屏幕上完成渲染的时间点。
+
+研究表明良好的LCP分数网站应该努力将首次内容绘制控制在**1.8 秒**或以内。
+
+### LCP
+
+全称**Largest Contentful Paint**，意为最大内容绘制，它是测量[感知加载速度](https://web.dev/user-centric-performance-metrics/#types-of-metrics)的一个以用户为中心的重要指标，因为该项指标会在页面的主要内容基本加载完成时，在页面加载时间轴中标记出相应的点，迅捷的 LCP 有助于让用户确信页面是[有效的](https://web.dev/user-centric-performance-metrics/#questions)。
+
+最大内容绘制 (LCP) 指标会根据页面[首次开始加载](https://w3c.github.io/hr-time/#timeorigin-attribute)的时间点来报告可视区域内可见的最大[图像或文本块](https://web.dev/lcp/#what-elements-are-considered)完成渲染的相对时间。良好的LCP分数应该将最大内容绘制控制在**2.5 秒**或以内。
+
+以下的元素类型都可以视为最大内容绘制考量的元素类型：
+
+*   `<img>`元素
+*   内嵌在`<svg>`元素内的`<image>`元素
+*   `<video>`元素（使用封面图像）
+*   通过`url()`函数（而非使用[CSS 渐变](https://developer.mozilla.org/docs/Web/CSS/CSS_Images/Using_CSS_gradients)）加载的带有背景图像的元素
+*   包含文本节点或其他行内级文本元素子元素的[块级元素](https://developer.mozilla.org/docs/Web/HTML/Block-level_elements)。
+
+![Untitled 7.png](https://imgur.com/sact8UX.png)
+
+在上述的时间轴中，从开始加载到加载完成，最后一帧的绿色元素可以看到是加载过程中最大的元素，所以可以视之为LCP元素。
+
+### CLS
+
+全称**Cumulative Layout Shift**，意为累计布局偏移。CLS 是测量整个页面生命周期内发生的所有[意外](https://web.dev/cls/#expected-vs-unexpected-layout-shifts)布局偏移中最大一连串的*布局偏移分数*。一连串的布局偏移，也叫\*[会话窗口](https://web.dev/cls/evolving-cls/#why-a-session-window)\*，是指一个或多个快速连续发生的单次布局偏移，每次偏移相隔的时间少于 1 秒，且整个窗口的最大持续时长为 5 秒。
+
+页面的累计布局偏移越多，说明网页抖动的就越厉害，会带来很差的用户体验，好的网站应该努力将 CLS 分数控制在**0.1** 或以下。
+
+![Untitled 8.png](https://imgur.com/0pOptbR.png)
+
+### TTI
+
+全称**Time to Interactive**，意为可交互时间，用于测量页面从开始加载到主要子资源完成渲染，并能够快速、可靠地响应用户输入所需的时间。
+
+那么如何计算TTI的时间呢？分以下几步：
+
+1.  从FCP开始计算
+2.  持续五秒内无长任务（执行时间超过 50 毫秒 (ms) 的任何任务）且无两个及以上get请求
+3.  往前回溯至5秒前最后一个长任务时间
+
+![Untitled 9.png](https://imgur.com/3eO83Iv.png)
+
+### TBT
+
+全称**Total Blocking Time**，意为总阻塞时间，主要测量的是FCP与TTI之间阻塞的总时间，这期间，主线程被阻塞的时间过长，无法作出输入响应。
+
+TBT 是 TTI 的一个出色的配套指标，有助于量化在页面交互性变为可靠前，不可交互程度的严重性。
+
+![Untitled 10.png](https://imgur.com/6Vqa9sc.png)
+
+### FID
+
+全称**First Input Delay**，意为首次输入延迟。FID是指从用户第一次与页面交互（例如当他们单击链接、点按按钮或使用由 JavaScript 驱动的自定义控件）直到浏览器对交互作出响应，并实际能够开始处理事件处理程序所经过的时间。
+
+良好的FID分数应该将首次输入延迟控制在**100 毫秒**或以内。
+
+![Untitled 11.png](https://imgur.com/DUIiv0W.png)
+
+FID通常会发生在FCP和TTI之间，在此期间，页面一般已经渲染出部分内容，但是否可以交互还不确定。
+
+### SI
+
+全称**Speed Index**，意为速度指标，主要测量的是页面加载过程中可视化显示内容的速度。
+
+下表是衡量SI分数时间
+
+| Speed Index(in seconds)速度指数(秒) | 速度     |
+| ------------------------------ | ------ |
+| 0–3.4                          | 绿色(快速) |
+| 3.4–5.8                        | 橙色(中度) |
+| 超过5.8                          | 红色(慢)  |
+
+### INP
+
+全称Interaction to Next Paint，意为从交互到下一次绘制的延时，与FID 类似，都属于交互体验指标。
+
+INP不仅仅测量首次交互，而是所有交互延时。除了输入延时，还包括事件处理时长，渲染延时。它的目标是确保从用户开始交互到下一帧绘制的时间尽可能短，以满足用户进行的所有或大多数交互。
+
+良好的INP分数 应该不超过 200 ms。
+
+![Untitled 12.png](https://imgur.com/vJkR2f3.png)
+
+## 总结
+
+以上主要介绍了性能相关的工具及指标，可以通过相关指标帮助我们更好的了解如何进行性能优化，后续会继续介绍如进行性能优化。
