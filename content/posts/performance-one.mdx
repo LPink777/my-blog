@@ -27,9 +27,9 @@ Lighthouse 是一个开源的自动化工具，用于提高网页的质量。
 
 打开浏览器 ⇒ 打开网页 ⇒ 打开 Chrome DevTools ⇒ 点击**Lighthouse** tab ⇒ 点击 **Analyze page load ⇒** 一段时间之后lighthouse会给出页面的详细分析报告
 
-![Untitled.png](https://i.imgur.com/eXH9ZDA.png)
+![Untitled.png](https://imgur.com/XZ8OXBO.png)
 
-![Untitled 1.png](https://imgur.com/t5RWtpV.png)
+![Untitled 1.png](https://imgur.com/KaaFH7j.png)
 
 node中使用：
 
@@ -55,11 +55,11 @@ WebPageTest是一种用于测量网页加载性能的工具。它可以帮助你
 
 使用：打开https://www.webpagetest.org/ 输入要测试的网站，点击开始测试按钮即可
 
-![Untitled 2.png](https://imgur.com/wA0Xy8w.png)
+![Untitled 2.png](https://imgur.com/3laT68v.png)
 
 可以看到webpagetest会给出页面各个指标的分数以及整个渲染过程的快照，还可以看到各个请求的瀑布流可视图，可以帮助你直观的看出各个请求的详细信息。
 
-![Untitled 3.png](https://imgur.com/oVFQohf.png)
+![Untitled 3.png](https://imgur.com/GhYkzyO.png)
 
 与lighthouse不同，webpagetest的核心指标分别是FCP、LCP、CLS、FID、TTFB、INP。
 
@@ -69,7 +69,7 @@ web vitals是针对目前许多的性能测量和性能报告工具，一些开�
 
 web vitals的核心指标主要为LCP、FID、CLS。
 
-![Untitled 4.png](https://imgur.com/fUQuc9U.png)
+![Untitled 4.png](https://imgur.com/B2paaeo.png)
 
 如果你想在javascript中测量核心 Web 指标，可以使用 [web-vitals](https://github.com/GoogleChrome/web-vitals) JavaScript 库，简单调用如下
 
@@ -92,7 +92,7 @@ onLCP(sendToAnalytics);
 
 PageSpeed Insights (PSI) 与webPagetest类似，也会针对网页在移动设备和桌面设备上的用户体验生成报告，并就如何改进网页提出建议。不同的是PageSpeed Insights的核心指标采用的是wev vitals的指标。
 
-![Untitled 5.png](https://imgur.com/0MW7kJQ.png)
+![Untitled 5.png](https://imgur.com/7sWh1gb.png)
 
 ## 性能指标
 
@@ -113,7 +113,7 @@ PageSpeed Insights (PSI) 与webPagetest类似，也会针对网页在移动设�
 
 全称**First Contentful Paint**，意为首次内容绘制，首次内容绘制 (FCP) 指标测量页面从开始加载到页面内容的任何部分在屏幕上完成渲染的时间。对于该指标，"内容"指的是文本、图像（包括背景图像）、`<svg>`元素或非白色的`<canvas>`元素。
 
-![Untitled 6.png](https://imgur.com/9nqcaJw.png)
+![Untitled 6.png](https://imgur.com/mhG9ljt.png)
 
 在上方的加载时间轴中，FCP 发生在第二帧，因为那是首批文本和图像元素在屏幕上完成渲染的时间点。
 
@@ -133,7 +133,7 @@ PageSpeed Insights (PSI) 与webPagetest类似，也会针对网页在移动设�
 *   通过`url()`函数（而非使用[CSS 渐变](https://developer.mozilla.org/docs/Web/CSS/CSS_Images/Using_CSS_gradients)）加载的带有背景图像的元素
 *   包含文本节点或其他行内级文本元素子元素的[块级元素](https://developer.mozilla.org/docs/Web/HTML/Block-level_elements)。
 
-![Untitled 7.png](https://imgur.com/sact8UX.png)
+![Untitled 7.png](https://imgur.com/00uVZ46.png)
 
 在上述的时间轴中，从开始加载到加载完成，最后一帧的绿色元素可以看到是加载过程中最大的元素，所以可以视之为LCP元素。
 
@@ -143,7 +143,7 @@ PageSpeed Insights (PSI) 与webPagetest类似，也会针对网页在移动设�
 
 页面的累计布局偏移越多，说明网页抖动的就越厉害，会带来很差的用户体验，好的网站应该努力将 CLS 分数控制在**0.1** 或以下。
 
-![Untitled 8.png](https://imgur.com/0pOptbR.png)
+![Untitled 8.png](https://imgur.com/e8Jamjl.png)
 
 ### TTI
 
@@ -155,7 +155,7 @@ PageSpeed Insights (PSI) 与webPagetest类似，也会针对网页在移动设�
 2.  持续五秒内无长任务（执行时间超过 50 毫秒 (ms) 的任何任务）且无两个及以上get请求
 3.  往前回溯至5秒前最后一个长任务时间
 
-![Untitled 9.png](https://imgur.com/3eO83Iv.png)
+![Untitled 9.png](https://imgur.com/TLEziHk.png)
 
 ### TBT
 
@@ -163,7 +163,7 @@ PageSpeed Insights (PSI) 与webPagetest类似，也会针对网页在移动设�
 
 TBT 是 TTI 的一个出色的配套指标，有助于量化在页面交互性变为可靠前，不可交互程度的严重性。
 
-![Untitled 10.png](https://imgur.com/6Vqa9sc.png)
+![Untitled 10.png](https://imgur.com/r63kM0R.png)
 
 ### FID
 
@@ -171,7 +171,7 @@ TBT 是 TTI 的一个出色的配套指标，有助于量化在页面交互性�
 
 良好的FID分数应该将首次输入延迟控制在**100 毫秒**或以内。
 
-![Untitled 11.png](https://imgur.com/DUIiv0W.png)
+![Untitled 11.png](https://imgur.com/8MGxklz.png)
 
 FID通常会发生在FCP和TTI之间，在此期间，页面一般已经渲染出部分内容，但是否可以交互还不确定。
 
@@ -195,7 +195,7 @@ INP不仅仅测量首次交互，而是所有交互延时。除了输入延时�
 
 良好的INP分数 应该不超过 200 ms。
 
-![Untitled 12.png](https://imgur.com/vJkR2f3.png)
+![Untitled 12.png](https://imgur.com/CjOYWTi.png)
 
 ## 总结
 
