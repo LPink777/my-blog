@@ -13,7 +13,7 @@ Lottie是Airbnb开发的一种轻量级的JavaScript库，它能够在Web、iOS�
 下表列出了lottie-web、css动画、gif和帧动画的比较。它们主要从时间成本、动画还原度、开发成本、产物大小和性能等方面进行对比。
 
 | 时间成本 | 动画还原度 | 开发成本 | 产物大小 | 性能 |
-| ---------- | ----------- | --------- | ----------- | ---------- |
+| --- | --- | --- | --- | --- |
 | Lottie-web | 高 | 低 | 低 | 优 |
 | CSS动画 | 低 | 低 | 低 | 优 |
 | GIF | 高 | 中 | 中 | 差 |
@@ -125,6 +125,61 @@ const App = () => {
 	}, []);
 
 	return <div id='lottie' />;
+};
+
+export default App;
+```
+
+### 5.4 参数说明
+
+**`options`** 参数包含以下属性：
+
+| 参数               | 类型              | 默认值   | 说明                            |
+| ---------------- | --------------- | ----- | ----------------------------- |
+| animationData    | object or array | null  | Lottie动画数据                    |
+| path             | string          | null  | Lottie动画的JSON文件路径             |
+| renderer         | string          | 'svg' | Lottie动画渲染方式，支持'canvas'和'svg' |
+| loop             | bool or number  | true  | 是否循环播放动画                      |
+| autoplay         | bool            | false | 是否自动播放动画                      |
+| name             | string          | null  | Lottie动画的名称                   |
+| assetsPath       | string          | null  | Lottie动画资源文件夹的路径              |
+| rendererSettings | object          | {}    | Lottie动画渲染的一些配置               |
+
+在`options`**参数中，** `animationData`**和**`path`**必须设置其中之一。** `animationData`**可以直接传入Lottie动画数据，而**`path`则是Lottie动画的JSON文件路径，可以通过require或import语句导入。
+
+
+### 5.5 ****lottie-react****
+
+如果想直接使用react组件的话，也可以尝试使用 ****lottie-react**** 这种npm包，传入的属性与lottie-web的属性一致，它的好处在于整个包的大小比lottie-web小了很多，缺点是不如lottie-web灵活
+
+组件使用方式：
+
+```jsx
+import React from "react";
+import Lottie from "lottie-react";
+import groovyWalkAnimation from "./groovyWalk.json";
+
+const App = () => <Lottie animationData={groovyWalkAnimation} loop={true} />;
+
+export default App;
+```
+
+hooks使用方式：
+
+```jsx
+import React from "react";
+import { useLottie } from "lottie-react";
+import groovyWalkAnimation from "./groovyWalk.json";
+
+const App = () => {
+  const options = {
+    animationData: groovyWalkAnimation,
+    loop: true
+  };
+
+  const { View } = useLottie(options);
+
+  return <>{View}</>;
 };
 
 export default App;
