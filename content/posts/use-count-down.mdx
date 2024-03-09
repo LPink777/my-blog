@@ -1,0 +1,197 @@
+---
+title: 关于如何写一个精确倒计时的思考
+description: 探讨如何实现高性能、稳定且准确的倒计时器，提供最佳实践和代码示例，确保倒计时的精确性和效率。
+date: "2024-03-09"
+---
+
+
+又到了金三银四的季节了，面试的各位同学要开始准备起来了，今天主要分享一个在面试中经常被提到的一个面试题：倒计时。其实这个问题不仅是在面试中，也在我们的业务里也会经常用到，所以到底如何才能写好一个倒计时呢？
+
+首先我们在写倒计时的时候必须要考虑到三点：**准确性、稳定性、性能**。接下来我们来一步一步实现一个准确的定时器。
+
+## setInterval：
+
+我们先来简单实现一个倒计时的函数：
+
+```jsx
+function example1(leftTime){
+	let t = leftTime;
+  setInterval(() => {
+    t = t - 1000;
+    console.log(t);
+  }, 1000);
+}
+
+example1(10);
+```
+
+可以看到使用setInterval即可，但是setInterval真的准确吗？我们来看一下MDN中的说明：
+
+<aside>
+💡 如果你的代码逻辑执行时间可能比定时器时间间隔要长，建议你使用递归调用了 [setTimeout()](https://developer.mozilla.org/zh-CN/docs/Web/API/setTimeout) 的具名函数。例如，使用 setInterval() 以 5 秒的间隔轮询服务器，可能因网络延迟、服务器无响应以及许多其他的问题而导致请求无法在分配的时间内完成。
+
+</aside>
+
+简单来说意思就是，js因为是单线程的原因，如果前面有阻塞线程的任务，那么就可能会导致setInterval函数延迟，这样倒计时就肯定会不准确，建议使用setTimeout替换setInterval。
+
+## setTimeout：
+
+按照上述的建议将setInterval换为setTimeout后，我们来看下代码：
+
+```jsx
+function example2(leftTime) {
+  let t = leftTime;
+  setTimeout(() => {
+    t = t - 1000;
+    if (t > 0) {
+			console.log(t);
+      example2(t);
+    }
+    console.log(t);
+  }, 1000);
+}
+```
+
+MDN中也说了，有很多因素会导致 setTimeout 的回调函数执行比设定的预期值更久，比如**嵌套超时、非活动标签超时、追踪型脚本的节流、超时延迟**等等，详情见[https://developer.mozilla.org/zh-CN/docs/Web/API/setTimeout](https://developer.mozilla.org/zh-CN/docs/Web/API/setTimeout)，总就就是和setInterval差不多，都可能会有延迟执行的时候，这么一来如何提高倒计时的准确性呢？
+
+## requestAnimationFrame
+
+这里就不得不提一个新的方法requestAnimationFrame，它是一个浏览器 API，允许以 60 帧/秒 (FPS) 的速率请求回调，而不会阻塞主线程。通过调用 requestAnimationFrame 方法浏览器会在下一次重绘之前执行指定的函数，这样可以确保回调在每一帧之间都能够得到适时的更新。
+
+我们使用requestAnimationFrame结合setTimeout来优化一下之前的代码：
+
+```jsx
+function example3(leftTime) {
+  let t = leftTime;
+  function start() {
+    requestAnimationFrame(() => {
+      t = t - 1000;
+      setTimeout(() => {
+        console.log(t);
+        start();
+      }, 1000);
+    });
+  }
+  start();
+}
+```
+
+这样的话就可以保证我们倒计时的稳定性，使用requestAnimationFrame还有一个好处就是，息屏或者切后台的操作时，requestAnimationFrame是不会继续调用函数的，但是如果只使用setTimeout或者setInterval的话，他们会在后台一直执行，显而易见，requestAnimationFrame更加的节省性能开销。
+
+在切后台或者息屏的实际执行时会发现，虽然性能上好了，但上述的方法在准确性上确出了问题，当回到页面时，倒计时会接着切后台时的时间执行，这样肯定是不对。
+
+## diffTime：
+
+要解决上述的问题，通过时间差值每次进行对比就可以了。
+
+```jsx
+function example4(leftTime) {
+  const now = new Date().getTime();
+  function start() {
+    requestAnimationFrame(() => {
+      const diff = leftTime - (new Date().getTime() - now);
+      setTimeout(() => {
+        console.log(diff);
+        start();
+      }, 1000);
+    });
+  }
+  start();
+}
+
+```
+
+上面的代码实现思路其实在实际的业务中已经能够满足我们的使用场景，但是如果想要在面试的时候表现的再好一点其实还是有可以优化空间的，那么还要怎么优化呢？
+
+## finally
+
+![settiomeout.png](/img/settiomeout.png)
+
+我们来仔细分析一下，如上图所示，上面代码每次在setTimeout时其实真正执行的时间不可能完全是一秒，可能多也可能少，这样时间一长之后执行到结束时肯定会和实际时间有误差，虽然在秒级的单位不一定能看出来，如果采用毫秒做单位的话肯定会有些许。那么应该如何处理呢？
+
+其实最终的实现思路有也很简单，在每次在执行setTimeout的时候，不要将每次setTimeout的时间都设置为1000ms，而是算出每次执行实际setTimeout中执行的函数话费的时间，根据实际执行的时间算出下次setTimeout需要执行的时间即可。至于下次执行的时间应该怎么算呢？我们来通过简单的一个图表来找出其中的规律，假设下图是每次setTimeout执行的时间分布图所示：
+
+| Time时间 | executionTime实际执行时间 | diffTime差值 | nextTime下次执行时间 |
+| --- | --- | --- | --- |
+| 0 | 1200 | 200 | 1000 |
+| 1000 | 900 | 100 | 900 |
+| 2000 | 900 | 0 | 1000 |
+| 3000 | 800 | 200 | 1200 |
+| 4000 | 1300 | 100 | 900 |
+| … | … | … | … |
+
+通过上面的图表我们可以发现  nextTime = executionTime > nextTime ? 1000 - diffTime : 1000 + diffTime。 
+
+还需要注意的时候，一般在实际业务时后端返回给我们剩余时间字段，通常都不会是整秒的，这样我们第一次执行setTimeout的时的执行时间就需要处理一下，在倒计时最后结束时可以大大减少最终的时间误差。
+
+根据上述的思路我们来看一下最终封装出来的react hooks：
+
+```jsx
+
+const useCountDown = ({ leftTime, ms = 1000, onEnd }) => {
+  const countdownTimer = useRef();
+  const startTimer = useRef();
+  const startTimeRef = useRef(new Date().getTime());
+  const nextTimeRef = useRef(leftTime % ms);
+
+  const [count, setCount] = useState(leftTime);
+
+  const clearTimer = () => {
+    countdownTimer.current && clearTimeout(countdownTimer.current);
+    startTimer.current && clearTimeout(startTimer.current);
+  };
+
+  const startCountDown = () => {
+    clearTimer();
+    const currentTime = new Date().getTime();
+    // 每次实际执行的时间
+    const executionTime = currentTime - startTimeRef.current;
+
+    // 实际执行时间大于上一次需要执行的时间，说明执行时间多了，差值为多出来的时间，否则为少了的时间
+    const diffTime =
+      executionTime > nextTimeRef.current
+        ? executionTime - nextTimeRef.current
+        : nextTimeRef.current - executionTime;
+
+    // 剩余时间减去应该执行的时间
+    setCount((count) => {
+      const c = count - (count % ms === 0 ? ms : count % ms);
+      if (c <= 0) return 0;
+      return c;
+    });
+
+    // 算出下一次的时间 思路：本次的实际执行时间>下一次执行的时间 ？1000 - diffTime ： 1000 + diffTime；
+    nextTimeRef.current =
+      executionTime > nextTimeRef.current ? ms - diffTime : ms + diffTime;
+
+    // 重置初始时间
+    startTimeRef.current = new Date().getTime();
+
+    countdownTimer.current = setTimeout(() => {
+      requestAnimationFrame(startCountDown);
+    }, nextTimeRef.current);
+  };
+
+  useEffect(() => {
+    setCount(leftTime);
+    startTimer.current = setTimeout(
+      startCountDown,
+      nextTimeRef.current,
+    );
+    return () => {
+      clearTimer();
+    };
+  }, [leftTime]);
+
+  useEffect(() => {
+    if (count <= 0) {
+      clearTimer();
+      onEnd && onEnd();
+    }
+  }, [count]);
+
+  return count;
+};
+
+export default useCountDown;
+```
