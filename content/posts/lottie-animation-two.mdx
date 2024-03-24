@@ -10,11 +10,11 @@ date: "2024-01-30"
 
 著名的拼多多无限套娃动画：
 
-![iShot_2024-01-29_18.45.04.gif](https://i.ibb.co/8BJbHNQ/i-Shot-2024-01-29-18-45-04.gif)
+![pdd.gif](https://lpeakcc.oss-cn-beijing.aliyuncs.com/uPic/pdd.gif)
 
 支付宝中的锦鲤动画：
 
-![niannian.png](https://i.ibb.co/wNYMJtb/niannian.png)
+![jinli.png](https://lpeakcc.oss-cn-beijing.aliyuncs.com/uPic/ali.png)
 
 可以看到目前的复杂动画如果用 lottie 来实现的话可以说是非常提效的，基本引入一个动画 json 就可以解决问题，虽然设计可能要多花一点点时间，但对于我们研发来说不用在频繁的调试 css 动画，改了又改最后可能还不满意，兼容性还很好，而且很多大厂也都有很成熟的 lottie 的实践，这还在等什么呢，赶紧用起来。
 
@@ -30,15 +30,15 @@ date: "2024-01-30"
 
 这里我们就先要了解一下 lottie 使用的 json 是通过设计软件 AE（**Adobe After Effects**）输出的，那这里就必须要设计师配置配合我们来输出 json 文件，在 AE 中使用**bodymovin**插件导出 json 时需要注意不要勾选 Glyphs，最后渲染的动画要使用矢量图才能够做到动态更新
 
-![1_NLyxKR3j9lZQt8Sy7bOw3A.webp](https://i.ibb.co/0jDvrNL/1-NLyx-KR3j9l-ZQt8-Sy7b-Ow3-A.webp)
+![bd1.webp](https://lpeakcc.oss-cn-beijing.aliyuncs.com/uPic/bodymovie1.webp)
 
-![1_IY9jl1hIqdqa9iRwx18n5Q.webp](https://i.ibb.co/LvtjXvj/1-IY9jl1h-Iqdqa9i-Rwx18n5-Q.webp)
+![bd2.webp](https://lpeakcc.oss-cn-beijing.aliyuncs.com/uPic/bodymovie2.webp)
 
 此外，将需要更新的文案，让设计师在 AE 中添加源名称和图层名称
 
-![1.png](https://i.ibb.co/JtV4DXs/1.png)
+![ymc.png](https://lpeakcc.oss-cn-beijing.aliyuncs.com/uPic/yuanmingcheng.png)
 
-![2.png](https://i.ibb.co/86RJSyn/2.png)
+![tcmc.png](https://lpeakcc.oss-cn-beijing.aliyuncs.com/uPic/tuceng.png)
 
 以上准备工作做好之后，还需要下载一个 lottie-api 的 npm 包，更新文案主要靠它来操作
 
@@ -90,7 +90,7 @@ export default App;
 
 点击的功能其实也很简单，原理跟我们使用 js 点击事件一样，先获取元素，然后监听点击事件就可以了，那怎么可以获取到元素呢，这时候就又需要设计师来帮忙处理了，渲染动画时在图层后面加#xxx，对应的元素渲染出来后就会带 xxx 的 id 属性，这样我们就可以通过 document.getElementById("xxx")来获取元素了。
 
-![3.png](https://i.ibb.co/5YQg5Qv/3.png)
+![id.png](https://lpeakcc.oss-cn-beijing.aliyuncs.com/uPic/id.png)
 
 以下是点击事件的 demo：
 
@@ -157,7 +157,7 @@ function App() {
 export default App;
 ```
 
-## 总结：
+## 总结
 
 除了上述讲的点击、完成回调事件等，还有很多的事件都可以进行监听，如：loopComplete(循环播放结束时)、data_ready(动画 json 文件加载完毕)、destroy(动画销毁时)……，详细的大家可以在 lottie 官方进行查阅。
 
