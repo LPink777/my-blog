@@ -27,7 +27,10 @@ example1(10);
 可以看到使用 setInterval 即可，但是 setInterval 真的准确吗？我们来看一下 MDN 中的说明：
 
 <aside>
-💡 如果你的代码逻辑执行时间可能比定时器时间间隔要长，建议你使用递归调用了 [setTimeout()](https://developer.mozilla.org/zh-CN/docs/Web/API/setTimeout) 的具名函数。例如，使用 setInterval() 以 5 秒的间隔轮询服务器，可能因网络延迟、服务器无响应以及许多其他的问题而导致请求无法在分配的时间内完成。
+	💡
+	如果你的代码逻辑执行时间可能比定时器时间间隔要长，建议你使用递归调用了 [setTimeout()](https://developer.mozilla.org/zh-CN/docs/Web/API/setTimeout) 的具名函数。例如，使用 setInterval() 以
+	5
+	秒的间隔轮询服务器，可能因网络延迟、服务器无响应以及许多其他的问题而导致请求无法在分配的时间内完成。
 </aside>
 
 简单来说意思就是，js 因为是单线程的原因，如果前面有阻塞线程的任务，那么就可能会导致 setInterval 函数延迟，这样倒计时就肯定会不准确，建议使用 setTimeout 替换 setInterval。
@@ -50,12 +53,11 @@ function example2(leftTime) {
 }
 ```
 
-MDN 中也说了，有很多因素会导致 setTimeout 的回调函数执行比设定的预期值更久，比如**嵌套超时、非活动标签超时、追踪型脚本的节流、超时延迟**等等，详情见[https://developer.mozilla.org/zh-CN/docs/Web/API/setTimeout](https://developer.mozilla.org/zh-CN/docs/Web/API/setTimeout)，总就就是和 setInterval 差不多，时间一长，就会有误差出现，而且 setTimeout有一个很不好的点在于，当你的程序在后台运行时，setTimeout也会一直执行，这样会严重的而浪费性能，那么有什么办法可以解决这种问题吗？
+MDN 中也说了，有很多因素会导致 setTimeout 的回调函数执行比设定的预期值更久，比如**嵌套超时、非活动标签超时、追踪型脚本的节流、超时延迟**等等，详情见[https://developer.mozilla.org/zh-CN/docs/Web/API/setTimeout](https://developer.mozilla.org/zh-CN/docs/Web/API/setTimeout)，总就就是和 setInterval 差不多，时间一长，就会有误差出现，而且 setTimeout 有一个很不好的点在于，当你的程序在后台运行时，setTimeout 也会一直执行，这样会严重的而浪费性能，那么有什么办法可以解决这种问题吗？
 
 ## requestAnimationFrame
 
 这里就不得不提一个新的方法 requestAnimationFrame，它是一个浏览器 API，允许以 60 帧/秒 (FPS) 的速率请求回调，而不会阻塞主线程。通过调用 requestAnimationFrame 方法浏览器会在下一次重绘之前执行指定的函数，这样可以确保回调在每一帧之间都能够得到适时的更新。
-
 
 我们使用 requestAnimationFrame 结合 setTimeout 来优化一下之前的代码：
 
@@ -75,11 +77,11 @@ function example4(leftTime) {
 }
 ```
 
-为什么要使用 requestAnimationFrame + setTimeout呢？ 一个是息屏或者切后台的操作时，requestAnimationFrame 是不会继续调用函数的，但是如果只使用requestAnimationFrame 的话，函数相当于 1 秒的时候要调用 60 次，太浪费性能。
+为什么要使用 requestAnimationFrame + setTimeout 呢？ 一个是息屏或者切后台的操作时，requestAnimationFrame 是不会继续调用函数的，但是如果只使用 requestAnimationFrame 的话，函数相当于 1 秒的时候要调用 60 次，太浪费性能。
 
-在切后台或者息屏的实际执行时会发现，当回到页面时，倒计时会接着切后台时的时间执行，而没有更新到最新的时间，这样的bug是接受不了的。
+在切后台或者息屏的实际执行时会发现，当回到页面时，倒计时会接着切后台时的时间执行，而没有更新到最新的时间，这样的 bug 是接受不了的。
 
-## diffTime差值计算：
+## diffTime 差值计算：
 
 要解决上述的问题，最通用的办法就是通过时间差值每次进行对比就可以了。
 
@@ -97,25 +99,24 @@ function example5(leftTime) {
 }
 ```
 
-上面的代码实现思路其实在实际的业务中已经能够满足我们的使用场景，但其实还是没有解决setTimeout会延迟的问题，当线程被占用之后，很容易出现误差，那么有什么更新的办法进行处理呢？
+上面的代码实现思路其实在实际的业务中已经能够满足我们的使用场景，但其实还是没有解决 setTimeout 会延迟的问题，当线程被占用之后，很容易出现误差，那么有什么更新的办法进行处理呢？
 
 ## 最佳方案
 
-先要明确的是，setTimeout函数中执行代码的时间肯定是要大于等于setTimeout时间的，那么就可能出现设定的 1 秒，实际执行却执行了 2 秒的情况，那么我们的实现思路也很简单，每次计算一下setTimeout实际执行的时间，然后动态的调整下一次执行的时间，而不是设置固定的值
+先要明确的是，setTimeout 函数中执行代码的时间肯定是要大于等于 setTimeout 时间的，那么就可能出现设定的 1 秒，实际执行却执行了 2 秒的情况，那么我们的实现思路也很简单，每次计算一下 setTimeout 实际执行的时间，然后动态的调整下一次执行的时间，而不是设置固定的值
 
 我们来用图表举例推演一下每次执行的情况：
 
-| 第n次执行 | executionTime 实际执行时间 | nextTime 下次需要执行的时间 | totleTime 执行的总时间 |
-| --------- | -------------------------- | ------------- | --------------------- |
-| 0         | 0                          | 1000          | 0                     |
-| 1         | 1200                       | 800           | 1200                  |
-| 2         | 1100                       | 700           | 2300                  |
-| 3         | 1000                       | 700           | 3300                  |
-| 4         | 2200                       | 500           | 5500                  |
-| 5         | 1300                       | 200           | 6800                  |
-| 6         | 1200                       | 1000          | 8000                  |
-| …         | …                          | …             | …                     |
-
+| 第 n 次执行 | executionTime 实际执行时间 | nextTime 下次需要执行的时间 | totleTime 执行的总时间 |
+| ----------- | -------------------------- | --------------------------- | ---------------------- |
+| 0           | 0                          | 1000                        | 0                      |
+| 1           | 1200                       | 800                         | 1200                   |
+| 2           | 1100                       | 700                         | 2300                   |
+| 3           | 1000                       | 700                         | 3300                   |
+| 4           | 2200                       | 500                         | 5500                   |
+| 5           | 1300                       | 200                         | 6800                   |
+| 6           | 1200                       | 1000                        | 8000                   |
+| …           | …                          | …                           | …                      |
 
 从中可以看到：下次执行的时间 nextTime = 1000 - totleTime % 1000；这样我们就可以得出下次执行的时间，从而每次都去动态的调整多余消耗的时间，大大减小倒计时最终的误差
 
@@ -127,9 +128,9 @@ function example5(leftTime) {
 const useCountDown = ({ leftTime, ms = 1000, onEnd }) => {
 	const countdownTimer = useRef();
 	const startTimer = useRef();
-  //记录初始时间
+	//记录初始时间
 	const startTimeRef = useRef(performance.now());
-  // 第一次执行的时间处理，让下一次倒计时时调整为整数
+	// 第一次执行的时间处理，让下一次倒计时时调整为整数
 	const nextTimeRef = useRef(leftTime % ms);
 
 	const [count, setCount] = useState(leftTime);
@@ -152,9 +153,9 @@ const useCountDown = ({ leftTime, ms = 1000, onEnd }) => {
 				: nextTimeRef.current - executionTime;
 
 		setCount((count) => {
-			const c = count - (count % ms === 0 ? ms : count % ms);
-			if (c <= 0) return 0;
-			return c;
+			const nextCount =
+				count - (Math.floor(executionTime / ms) || 1) * ms - nt;
+			return nextCount <= 0 ? 0 : nextCount;
 		});
 
 		// 算出下一次的时间
@@ -190,6 +191,6 @@ const useCountDown = ({ leftTime, ms = 1000, onEnd }) => {
 export default useCountDown;
 ```
 
-如果想要封装组件的话，可以在hooks的基础上进行二次封装。
+如果想要封装组件的话，可以在 hooks 的基础上进行二次封装。
 
-到这里，肯定会有人说，做了这么多的操作，有必要吗，就算差0点几秒，在实际体验中用户完全感受不出来。我想说的是，完美比完成更重要，积累是一个持续的过程，很多没有必要的东西如果你能进行了解研究，从中学到一些解题的思路或者方法，这才是对我们最有意义的。
+到这里，肯定会有人说，做了这么多的操作，有必要吗，就算差 0 点几秒，在实际体验中用户完全感受不出来。我想说的是，完美比完成更重要，积累是一个持续的过程，很多没有必要的东西如果你能进行了解研究，从中学到一些解题的思路或者方法，这才是对我们最有意义的。
