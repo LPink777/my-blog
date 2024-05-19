@@ -125,67 +125,103 @@ function example5(leftTime) {
 根据上述的思路来看一下最终封装出来的 react hooks：
 
 ```jsx
-const useCountDown = ({ leftTime, ms = 1000, onEnd }) => {
-	const countdownTimer = useRef();
-	const startTimer = useRef();
-	//记录初始时间
-	const startTimeRef = useRef(performance.now());
-	// 第一次执行的时间处理，让下一次倒计时时调整为整数
-	const nextTimeRef = useRef(leftTime % ms);
+const useCountDown = ({ leftTime, ms = 1000, onEnd }: CountDownProps) => {
+	const countdownTimer = useRef<NodeJS.Timeout | null>();
+
+	const startTimeRef = useRef<number>(performance.now());
+
+	const nextTimeRef = useRef<number>(leftTime % ms);
+
+	const totalTimeRef = useRef<number>(0);
 
 	const [count, setCount] = useState(leftTime);
 
-	const clearTimer = () => {
-		countdownTimer.current && clearTimeout(countdownTimer.current);
-		startTimer.current && clearTimeout(startTimer.current);
-	};
+	const preLeftTime = usePrevious(leftTime);
 
-	const startCountDown = () => {
-		clearTimer();
-		const currentTime = performance.now();
-		// 算出每次实际执行的时间
-		const executionTime = currentTime - startTimeRef.current;
+	const clearTimer = useCallback(() => {
+		if (countdownTimer.current) {
+			clearTimeout(countdownTimer.current);
 
-		// 实际执行时间大于上一次需要执行的时间，说明执行时间多了，否则需要补上差的时间
-		const diffTime =
-			executionTime > nextTimeRef.current
-				? executionTime - nextTimeRef.current
-				: nextTimeRef.current - executionTime;
+			countdownTimer.current = null;
+		}
+	}, []);
 
-		setCount((count) => {
-			const nextCount =
-				count - (Math.floor(executionTime / ms) || 1) * ms - nt;
-			return nextCount <= 0 ? 0 : nextCount;
-		});
+	// requestAnimationFrame
 
-		// 算出下一次的时间
-		nextTimeRef.current =
-			executionTime > nextTimeRef.current ? ms - diffTime : ms + diffTime;
+	const startCountDown = useCallback(
+		(nt: number = 0) => {
+			clearTimer();
 
-		// 重置初始时间
-		startTimeRef.current = performance.now();
+			// 每次实际执行的时间
 
-		countdownTimer.current = setTimeout(() => {
-			requestAnimationFrame(startCountDown);
-		}, nextTimeRef.current);
-	};
+			const executionTime = performance.now() - startTimeRef.current; // 1.x
+
+			totalTimeRef.current = totalTimeRef.current + executionTime;
+
+			// 剩余时间减去应该执行的时间
+
+			setCount((count) => {
+				const nextCount =
+					count - (Math.floor(executionTime / ms) || 1) * ms - nt;
+
+				return nextCount <= 0 ? 0 : nextCount;
+			});
+
+			// 算出下一次的时间
+
+			nextTimeRef.current = ms - (totalTimeRef.current % ms);
+
+			// 重置初始时间
+
+			startTimeRef.current = performance.now();
+
+			countdownTimer.current = setTimeout(() => {
+				requestAnimationFrame(() => startCountDown(0));
+			}, nextTimeRef.current);
+		},
+
+		[ms]
+	);
 
 	useEffect(() => {
-		setCount(leftTime);
-		startTimer.current = setTimeout(startCountDown, nextTimeRef.current);
+		if (preLeftTime !== leftTime && preLeftTime !== undefined) {
+			clearTimer();
+
+			setCount(() => leftTime);
+
+			nextTimeRef.current = leftTime % ms;
+
+			countdownTimer.current = setTimeout(() => {
+				requestAnimationFrame(() =>
+					startCountDown(nextTimeRef.current)
+				);
+			}, nextTimeRef.current);
+		}
+	}, [leftTime, ms]);
+
+	useEffect(() => {
+		countdownTimer.current = setTimeout(
+			() => startCountDown(nextTimeRef.current),
+
+			nextTimeRef.current
+		);
+
 		return () => {
 			clearTimer();
 		};
-	}, [leftTime]);
+	}, []);
 
 	useEffect(() => {
 		if (count <= 0) {
 			clearTimer();
+
 			onEnd && onEnd();
 		}
 	}, [count]);
 
-	return count;
+	const formatCount = parseMillisecond(count);
+
+	return { formatCount, count };
 };
 
 export default useCountDown;
